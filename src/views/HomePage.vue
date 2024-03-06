@@ -4,7 +4,8 @@
             {{ serverStatusMessage }}
         </div>
 
-        <div v-if="!showCarsList && !showRegistrationForm && !showWithdrawForm" class="welcome-menu">
+        <div v-if="!showCarsList && !showRegistrationForm && !showWithdrawForm && !showUpdateLicensePlateFormView && !showUpdateForm"
+            class="welcome-menu">
             <h2>Welcome to the Parking System</h2>
             <div class="menu-options">
                 <button @click="showRegisterForm">Register Car</button>
@@ -56,19 +57,24 @@
             <p>No cars have been registered yet.</p>
         </div>
 
-        <div v-if="showUpdateLicensePlateForm" class="update-license-plate-form">
+        <div v-if="showUpdateLicensePlateFormView" class="registration-form">
             <h2>Enter License Plate of Car to Update</h2>
             <form @submit.prevent="verifyCarExists">
                 <input type="text" v-model="updateLicensePlate" placeholder="License Plate" required>
                 <div class="button-group">
                     <button type="submit">Verify</button>
-                    <button type="button" @click="showMenu">Back to Menu</button>
+                    <button type="button" @click="showMenuD">Back to Menu</button>
                 </div>
             </form>
+
+            <div v-if="updateAlertMessage" class="alert"
+                :class="{ 'alert-success': success, 'alert-danger': !success }">
+                {{ updateAlertMessage }}
+            </div>
         </div>
 
 
-        <div v-if="showUpdateForm" class="update-form">
+        <div v-if="showUpdateForm" class="registration-form">
             <h2>Update a Car</h2>
             <form @submit.prevent="updateCar">
                 <input type="text" v-model="updateLicensePlate" placeholder="License Plate" required>
@@ -79,13 +85,13 @@
                 <input type="file" @change="handleUpdateFileUpload">
                 <div class="button-group">
                     <button type="submit">Update</button>
-                    <button type="button" @click="showMenu">Back to Menu</button>
+                    <button type="button" @click="showMenuD">Back to Menu</button>
                 </div>
             </form>
 
-            <div v-if="updateAlertMessage" class="alert"
+            <div v-if="withdrawAlertMessageB" class="alert"
                 :class="{ 'alert-success': success, 'alert-danger': !success }">
-                {{ updateAlertMessage }}
+                {{ withdrawAlertMessageB }}
             </div>
         </div>
 
@@ -134,7 +140,7 @@ export default {
             withdrawAlertMessageA: '',
             withdrawAlertMessageB: '',
             serverStatusMessage: '',
-            showUpdateLicensePlateForm: false,
+            showUpdateLicensePlateFormView: false,
             showUpdateForm: false,
             updateLicensePlate: '',
             carToUpdate: {
@@ -255,12 +261,65 @@ export default {
                 });
         },
 
-        showUpdateLicensePlateFormView() {
-            this.showUpdateLicensePlateForm = true;
-            this.showUpdateForm = false;
+        resetCarToUpdate() {
+            this.carToUpdate = {
+                licensePlate: '',
+                newLicensePlate: '',
+                color: '',
+                photo: null
+            };
+        },
+
+        resetViews() {
             this.showRegistrationForm = false;
             this.showCarsList = false;
             this.showWithdrawForm = false;
+            this.showUpdateLicensePlateFormView = false;
+            this.showUpdateForm = false;
+        },
+
+        fetchCars() {
+            fetch(`http://${this.load_balancer_url}/cars/list`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load cars.');
+                    }
+                    return response.json();
+                })
+                .then(carsFromServer => {
+                    this.cars = carsFromServer;
+                    if (this.cars.length === 0) {
+                        this.noCarsRegistered = true;
+                    } else {
+                        this.noCarsRegistered = false;
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    this.noCarsRegistered = true;
+                });
+        },
+
+        showUpdateLicensePlateForm() {
+            this.fetchCars();
+            if (this.cars.length === 0) {
+                this.withdrawAlertMessageA = 'No cars registered yet.';
+                this.showUpdateLicensePlateFormView = false;
+
+                setTimeout(() => {
+                    this.withdrawAlertMessageA = '';
+                }, 5000);
+
+                this.success = false;
+            } else {
+                this.resetViews();
+                this.resetCarToUpdate();
+                this.showUpdateLicensePlateFormView = true;
+            }
+        },
+
+        showMenuD() {
+            this.resetViews();
         },
 
         verifyCarExists() {
@@ -271,12 +330,16 @@ export default {
                 })
                 .then(car => {
                     this.carToUpdate = car;
-                    this.showUpdateLicensePlateForm = false;
+                    this.updateLicensePlate = '';
+                    this.showUpdateLicensePlateFormView = false;
                     this.showUpdateForm = true;
+                    this.updateAlertMessage = '';
+                    this.success = true;
                 })
                 .catch(error => {
                     this.updateAlertMessage = error.message;
                     this.success = false;
+                    this.showUpdateForm = false;
                 });
         },
 
@@ -286,15 +349,13 @@ export default {
         },
 
         showUpdateFormView() {
+            this.resetViews();
             this.showUpdateForm = true;
-            this.showRegistrationForm = false;
-            this.showCarsList = false;
-            this.showWithdrawForm = false;
         },
 
         updateCar() {
             const formData = new FormData();
-            formData.append('license_plate', this.updateLicensePlate);
+            formData.append('license_plate', this.updateLicensePlate); 
             formData.append('color', this.carToUpdate.color);
             formData.append('photo', this.carToUpdate.photo);
 
@@ -308,12 +369,18 @@ export default {
                 })
                 // eslint-disable-next-line no-unused-vars
                 .then(data => {
-                    this.updateAlertMessage = 'Car updated successfully!';
+                    this.withdrawAlertMessageB = data.message;
                     this.success = true;
-                    this.showUpdateForm = false;
+
+                    setTimeout(() => {
+                        this.showUpdateForm = false;
+                        this.resetCarToUpdate();
+                        this.withdrawAlertMessageB = '';
+                    }, 3000);
+
                 })
                 .catch(error => {
-                    this.updateAlertMessage = error.message;
+                    this.withdrawAlertMessageB = error.message;
                     this.success = false;
                 });
         },
@@ -357,7 +424,9 @@ export default {
         },
 
         showWithdrawCarForm() {
-            if (this.cars.length === 0) {
+            this.withdrawAlertMessageB = '';
+            this.fetchCars();
+            if (this.noCarsRegistered) {
                 this.withdrawAlertMessageA = 'No cars to withdraw.';
 
                 setTimeout(() => {
