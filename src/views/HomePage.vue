@@ -9,6 +9,7 @@
             <div class="menu-options">
                 <button @click="showRegisterForm">Register Car</button>
                 <button @click="listCars">List Cars</button>
+                <button @click="showUpdateLicensePlateForm">Update Car</button>
                 <button @click="showWithdrawCarForm">Withdraw Car</button>
             </div>
 
@@ -45,7 +46,7 @@
                 <div class="car-details">
                     <p><strong>Plate:</strong> {{ car.licensePlate }}</p>
                     <p><strong>Color:</strong> {{ car.color }}</p>
-                    <p><strong>Entry Time:</strong> {{ new Date(car.timestamp).toLocaleString() }}</p>
+                    <p><strong>Entry Time:</strong> {{ new Date(car.entryTime).toLocaleString() }}</p>
                 </div>
             </div>
             <button class="back-to-menu-btn" @click="showMenuB">Back to Menu</button>
@@ -53,6 +54,39 @@
 
         <div v-if="noCarsRegistered && showCarsList" class="alert alert-info">
             <p>No cars have been registered yet.</p>
+        </div>
+
+        <div v-if="showUpdateLicensePlateForm" class="update-license-plate-form">
+            <h2>Enter License Plate of Car to Update</h2>
+            <form @submit.prevent="verifyCarExists">
+                <input type="text" v-model="updateLicensePlate" placeholder="License Plate" required>
+                <div class="button-group">
+                    <button type="submit">Verify</button>
+                    <button type="button" @click="showMenu">Back to Menu</button>
+                </div>
+            </form>
+        </div>
+
+
+        <div v-if="showUpdateForm" class="update-form">
+            <h2>Update a Car</h2>
+            <form @submit.prevent="updateCar">
+                <input type="text" v-model="updateLicensePlate" placeholder="License Plate" required>
+                <div class="form-group">
+                    <label for="updateCarColor">Color:</label>
+                    <input type="color" id="updateCarColor" v-model="carToUpdate.color">
+                </div>
+                <input type="file" @change="handleUpdateFileUpload">
+                <div class="button-group">
+                    <button type="submit">Update</button>
+                    <button type="button" @click="showMenu">Back to Menu</button>
+                </div>
+            </form>
+
+            <div v-if="updateAlertMessage" class="alert"
+                :class="{ 'alert-success': success, 'alert-danger': !success }">
+                {{ updateAlertMessage }}
+            </div>
         </div>
 
         <div v-if="showWithdrawForm" class="registration-form">
@@ -78,7 +112,7 @@ export default {
     name: 'HomePage',
     data() {
         return {
-            load_balancer_url: process.env.VUE_APP_LOAD_BALANCER_URL_SD,
+            load_balancer_url: 'localhost:3001',
             serverOnline: true,
             errorMessage: '',
             successMessage: '',
@@ -100,6 +134,15 @@ export default {
             withdrawAlertMessageA: '',
             withdrawAlertMessageB: '',
             serverStatusMessage: '',
+            showUpdateLicensePlateForm: false,
+            showUpdateForm: false,
+            updateLicensePlate: '',
+            carToUpdate: {
+                licensePlate: '',
+                color: '',
+                photo: null
+            },
+            updateAlertMessage: '',
         };
     },
     methods: {
@@ -212,14 +255,83 @@ export default {
                 });
         },
 
+        showUpdateLicensePlateFormView() {
+            this.showUpdateLicensePlateForm = true;
+            this.showUpdateForm = false;
+            this.showRegistrationForm = false;
+            this.showCarsList = false;
+            this.showWithdrawForm = false;
+        },
+
+        verifyCarExists() {
+            fetch(`http://${this.load_balancer_url}/cars/${this.updateLicensePlate}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Car not found.');
+                    return response.json();
+                })
+                .then(car => {
+                    this.carToUpdate = car;
+                    this.showUpdateLicensePlateForm = false;
+                    this.showUpdateForm = true;
+                })
+                .catch(error => {
+                    this.updateAlertMessage = error.message;
+                    this.success = false;
+                });
+        },
+
         showMenuB() {
             this.showCarsList = false;
             this.noCarsRegistered = false;
         },
 
+        showUpdateFormView() {
+            this.showUpdateForm = true;
+            this.showRegistrationForm = false;
+            this.showCarsList = false;
+            this.showWithdrawForm = false;
+        },
+
+        updateCar() {
+            const formData = new FormData();
+            formData.append('license_plate', this.updateLicensePlate);
+            formData.append('color', this.carToUpdate.color);
+            formData.append('photo', this.carToUpdate.photo);
+
+            fetch(`http://${this.load_balancer_url}/cars/update`, {
+                method: 'PATCH',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to update the car, verify the data entered.');
+                    return response.json();
+                })
+                // eslint-disable-next-line no-unused-vars
+                .then(data => {
+                    this.updateAlertMessage = 'Car updated successfully!';
+                    this.success = true;
+                    this.showUpdateForm = false;
+                })
+                .catch(error => {
+                    this.updateAlertMessage = error.message;
+                    this.success = false;
+                });
+        },
+
+        handleUpdateFileUpload(event) {
+            const files = event.target.files;
+
+            if (files.length > 0) {
+                const file = files[0];
+                this.carToUpdate.photo = file;
+            } else {
+                this.carToUpdate.photo = null;
+            }
+        },
+
         withdrawCar() {
             fetch(`http://${this.load_balancer_url}/cars/withdraw`, {
-                method: 'PATCH',
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
