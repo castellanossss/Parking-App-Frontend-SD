@@ -118,7 +118,7 @@ export default {
     name: 'HomePage',
     data() {
         return {
-            load_balancer_url: 'localhost:3001',
+            load_balancer_url: '',
             serverOnline: true,
             errorMessage: '',
             successMessage: '',
