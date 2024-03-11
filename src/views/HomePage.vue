@@ -452,6 +452,7 @@ export default {
     },
 
     mounted() {
+        console.log(this.load_balancer_url)
         this.checkServerStatus();
     }
 };
