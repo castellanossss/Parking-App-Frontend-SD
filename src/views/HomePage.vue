@@ -158,14 +158,14 @@ export default {
         },
 
         checkServerStatus() {
-            fetch(`http://${this.load_balancer_url}/cars/test-connection`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Server is not responding');
-                    this.updateServerStatus(true, '');
+            return fetch('/src/config.json')
+                .then((response) =>
+                    response.json())
+                .then((config) => {
+                    this.load_balancer_url = config.loadBalancerUrl;
                 })
-                .catch(error => {
-                    console.error(error);
-                    this.updateServerStatus(false, 'Cannot connect to the server. Please try again later.');
+                .catch((error) => {
+                    console.error('Cannot load the configuration: ', error)
                 });
         },
 
@@ -355,7 +355,7 @@ export default {
 
         updateCar() {
             const formData = new FormData();
-            formData.append('license_plate', this.updateLicensePlate); 
+            formData.append('license_plate', this.updateLicensePlate);
             formData.append('color', this.carToUpdate.color);
             formData.append('photo', this.carToUpdate.photo);
 
