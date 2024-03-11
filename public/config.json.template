@@ -1,0 +1,3 @@
+{
+    "loadBalancerUrl": "${LOAD_BALANCER_URL}"
+}
