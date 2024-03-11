@@ -158,7 +158,7 @@ export default {
         },
 
         checkServerStatus() {
-            return fetch('/src/config.json')
+            return fetch('/config.json')
                 .then((response) =>
                     response.json())
                 .then((config) => {
