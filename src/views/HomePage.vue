@@ -176,7 +176,6 @@ export default {
             const formData = new FormData();
             formData.append('license_plate', this.car.licensePlate);
             formData.append('color', this.car.color);
-            formData.append('photo', this.car.photo);
 
             fetch(`http://${this.load_balancer_url}/cars/register2`, {
                 method: 'POST',
@@ -204,7 +203,7 @@ export default {
                     this.success = false;
                 });
         },
-
+ 
         showMenu() {
             this.car.licensePlate = '';
             this.car.color = '';
