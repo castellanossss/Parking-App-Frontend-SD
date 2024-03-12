@@ -354,13 +354,18 @@ export default {
         },
 
         updateCar() {
-            const formData = new FormData();
-            formData.append('license_plate', this.updateLicensePlate);
-            formData.append('color', this.carToUpdate.color);
+            const carData = {
+                license_plate: this.updateLicensePlate,
+                color: this.carToUpdate.color,
+                new_license_plate: this.carToUpdate.newLicensePlate
+            };
 
             fetch(`http://${this.load_balancer_url}/cars/update`, {
                 method: 'PATCH',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(carData)
             })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to update the car, verify the data entered.');
@@ -396,12 +401,11 @@ export default {
         },
 
         withdrawCar() {
-            fetch(`http://${this.load_balancer_url}/cars/withdraw`, {
+            fetch(`http://${this.load_balancer_url}/cars/withdraw/${encodeURIComponent(this.withdrawLicensePlate)}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ license_plate: this.withdrawLicensePlate })
+                }
             })
                 .then(response => {
                     if (!response.ok) throw new Error('Error withdrawing car.');
