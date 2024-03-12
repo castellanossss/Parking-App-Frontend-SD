@@ -171,7 +171,6 @@ export default {
 
         registerCar() {
             this.alertMessage = '';
-            this.selectedFileName = '';
 
             const formData = new FormData();
             formData.append('license_plate', this.car.licensePlate);
@@ -191,7 +190,6 @@ export default {
                     this.success = true;
                     this.car.licensePlate = '';
                     this.car.color = '';
-                    this.car.photo = null;
 
                     setTimeout(() => {
                         this.alertMessage = '';
@@ -203,7 +201,7 @@ export default {
                     this.success = false;
                 });
         },
- 
+
         showMenu() {
             this.car.licensePlate = '';
             this.car.color = '';
