@@ -172,19 +172,22 @@ export default {
         registerCar() {
             this.alertMessage = '';
 
-            const formData = new FormData();
-            formData.append('license_plate', this.car.licensePlate);
-            formData.append('color', this.car.color);
+            const carData = {
+                license_plate: this.car.licensePlate,
+                color: this.car.color
+            };
 
             fetch(`http://${this.load_balancer_url}/cars/register2`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(carData)
             })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to register the car, verify the data entered.');
                     return response.json();
                 })
-                // eslint-disable-next-line no-unused-vars
                 .then(data => {
                     this.alertMessage = 'Car registered successfully!';
                     this.success = true;
