@@ -27,7 +27,7 @@
                     <label for="carColor">Color:</label>
                     <input type="color" id="carColor" v-model="car.color" required>
                 </div>
-                <input type="file" @change="handleFileUpload" required>
+                <input type="file" @change="handleFileUpload">
                 <div class="button-group">
                     <button type="submit">Submit</button>
                     <button type="button" @click="showMenu">Back to Menu</button>
@@ -177,9 +177,8 @@ export default {
             formData.append('license_plate', this.car.licensePlate);
             formData.append('color', this.car.color);
             formData.append('photo', this.car.photo);
-            formData.append('entryTime', new Date().toISOString());
 
-            fetch(`http://${this.load_balancer_url}/cars/register`, {
+            fetch(`http://${this.load_balancer_url}/cars/register2`, {
                 method: 'POST',
                 body: formData
             })
@@ -357,7 +356,6 @@ export default {
             const formData = new FormData();
             formData.append('license_plate', this.updateLicensePlate);
             formData.append('color', this.carToUpdate.color);
-            formData.append('photo', this.carToUpdate.photo);
 
             fetch(`http://${this.load_balancer_url}/cars/update`, {
                 method: 'PATCH',
