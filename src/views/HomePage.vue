@@ -188,6 +188,7 @@ export default {
                     if (!response.ok) throw new Error('Failed to register the car, verify the data entered.');
                     return response.json();
                 })
+                // eslint-disable-next-line no-unused-vars
                 .then(data => {
                     this.alertMessage = 'Car registered successfully!';
                     this.success = true;
