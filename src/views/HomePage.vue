@@ -172,17 +172,16 @@ export default {
         registerCar() {
             this.alertMessage = '';
 
-            const carData = {
-                license_plate: this.car.licensePlate,
-                color: this.car.color
-            };
+            const formData = new FormData();
+            formData.append('license_plate', this.car.licensePlate);
+            formData.append('color', this.car.color);
+            if (this.car.photo) {
+                formData.append('photo', this.car.photo);
+            }
 
-            fetch(`http://${this.load_balancer_url}/cars/register2`, {
+            fetch(`http://${this.load_balancer_url}/cars/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(carData)
+                body: formData
             })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to register the car, verify the data entered.');
@@ -194,6 +193,7 @@ export default {
                     this.success = true;
                     this.car.licensePlate = '';
                     this.car.color = '';
+                    this.car.photo = null;
 
                     setTimeout(() => {
                         this.alertMessage = '';
@@ -354,24 +354,22 @@ export default {
         },
 
         updateCar() {
-            const carData = {
-                license_plate: this.updateLicensePlate,
-                color: this.carToUpdate.color,
-                new_license_plate: this.carToUpdate.newLicensePlate
-            };
+            const formData = new FormData();
+            formData.append('license_plate', this.carToUpdate.licensePlate);
+            formData.append('color', this.carToUpdate.color);
+            formData.append('new_license_plate', this.carToUpdate.newLicensePlate);
+            if (this.carToUpdate.photo) {
+                formData.append('photo', this.carToUpdate.photo);
+            }
 
             fetch(`http://${this.load_balancer_url}/cars/update`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(carData)
+                body: formData
             })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to update the car, verify the data entered.');
                     return response.json();
                 })
-                // eslint-disable-next-line no-unused-vars
                 .then(data => {
                     this.withdrawAlertMessageB = data.message;
                     this.success = true;
@@ -388,7 +386,7 @@ export default {
                     this.success = false;
                 });
         },
-
+        
         handleUpdateFileUpload(event) {
             const files = event.target.files;
 
