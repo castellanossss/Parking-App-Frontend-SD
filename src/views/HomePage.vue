@@ -42,8 +42,7 @@
         <div v-if="showCarsList" class="car-list-container">
             <h2 class="car-list-title">List of Registered Cars</h2>
             <div v-for="car in cars" :key="car.licensePlate" class="car-item">
-                <img :src="`http://${this.load_balancer_url}/uploads/${car.imagePath}`" alt="Car photo"
-                    class="car-image" />
+                <img :src="car.imagePath" alt="Car photo" class="car-image" />
                 <div class="car-details">
                     <p><strong>Plate:</strong> {{ car.licensePlate }}</p>
                     <p><strong>Color:</strong> {{ car.color }}</p>
